@@ -136,6 +136,11 @@ class Turn(AIPerfBaseModel):
     max_tokens: int | None = Field(
         default=None, description="Maximum number of tokens to generate for this turn."
     )
+    raw_messages: list[dict[str, Any]] | None = Field(
+        default=None,
+        description="Pre-formatted OpenAI-compatible messages array. "
+        "When set, bypasses normal turn-based message construction in endpoints.",
+    )
     texts: list[Text] = Field(
         default=[], description="Collection of text data in each turn."
     )
@@ -172,6 +177,7 @@ class Turn(AIPerfBaseModel):
             timestamp=self.timestamp,
             delay=self.delay,
             max_tokens=self.max_tokens,
+            raw_messages=self.raw_messages,
             texts=[Text(name=t.name, contents=list(t.contents)) for t in self.texts],
             images=[
                 Image(

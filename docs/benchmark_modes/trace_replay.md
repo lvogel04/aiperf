@@ -86,6 +86,21 @@ aiperf profile \
 
 The `--fixed-schedule` flag tells AIPerf to send requests at the exact timestamps specified in the trace. This reproduces the original timing pattern.
 
+## Using Pre-formatted Messages
+
+Instead of synthetic prompts generated from `input_length` and `hash_ids`, you can provide an OpenAI-compatible `messages` array directly per trace entry. This is useful for replaying captured conversations (e.g., coding agent sessions) with exact prompt content.
+
+Each entry's `messages` field contains the full conversation history up to that point. In multi-turn sessions, later entries include prior turns so the server receives the complete context:
+
+```json
+{"session_id": "sess-1", "messages": [{"role": "user", "content": "Hello"}], "output_length": 50, "timestamp": 0}
+{"session_id": "sess-1", "messages": [{"role": "user", "content": "Hello"}, {"role": "assistant", "content": "Hi!"}, {"role": "user", "content": "How are you?"}], "output_length": 30, "timestamp": 2000}
+```
+
+The `messages` field is mutually exclusive with `input_length` and `text_input`. When set, the messages array is sent directly to the API payload, bypassing prompt synthesis entirely. The model's actual response is not carried forward between turns -- each turn uses its pre-defined messages.
+
+The messages must match the format expected by your target server. For OpenAI-compatible endpoints, tool calls use the `tool_calls` field on assistant messages (not Anthropic-style `tool_use` content blocks).
+
 ## Profile using real Mooncake Trace
 
 For real-world benchmarking, use the FAST25 production trace data from the Mooncake research paper:

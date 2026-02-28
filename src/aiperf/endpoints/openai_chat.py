@@ -40,9 +40,13 @@ class ChatEndpoint(BaseEndpoint):
 
         turns = request_info.turns
         model_endpoint = request_info.model_endpoint
-        messages = self._create_messages(
-            turns, request_info.system_message, request_info.user_context_message
-        )
+
+        if turns[-1].raw_messages is not None:
+            messages = turns[-1].raw_messages
+        else:
+            messages = self._create_messages(
+                turns, request_info.system_message, request_info.user_context_message
+            )
 
         payload = {
             "messages": messages,
