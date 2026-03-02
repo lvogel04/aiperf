@@ -258,7 +258,7 @@ class MooncakeTrace(AIPerfBaseModel):
 
         if self.hash_ids is not None and self.input_length is None:
             raise ValueError(
-                "'hash_ids' is only allowed when 'input_length' is provided, not when 'text_input' is provided"
+                "'hash_ids' is only allowed when 'input_length' is provided, not when 'text_input' or 'messages' are provided"
             )
 
         return self
