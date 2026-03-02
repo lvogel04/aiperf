@@ -177,7 +177,9 @@ class Turn(AIPerfBaseModel):
             timestamp=self.timestamp,
             delay=self.delay,
             max_tokens=self.max_tokens,
-            raw_messages=self.raw_messages,
+            raw_messages=list(self.raw_messages)
+            if self.raw_messages is not None
+            else None,
             texts=[Text(name=t.name, contents=list(t.contents)) for t in self.texts],
             images=[
                 Image(
