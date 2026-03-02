@@ -49,6 +49,7 @@ Required fields for trace replay:
 - `input_length`: Number of input tokens
 - `output_length`: Number of output tokens
 - `hash_ids`: List of block hashes (optional)
+- `tools`: List of OpenAI-compatible tool definitions (optional, requires `messages`)
 
 Example entry:
 
@@ -99,7 +100,15 @@ Each entry's `messages` field contains the full conversation history up to that 
 
 The `messages` field is mutually exclusive with `input_length` and `text_input`. When set, the messages array is sent directly to the API payload, bypassing prompt synthesis entirely. The model's actual response is not carried forward between turns -- each turn uses its pre-defined messages.
 
-The messages must match the format expected by your target server. For OpenAI-compatible endpoints, tool calls use the `tool_calls` field on assistant messages (not Anthropic-style `tool_use` content blocks).
+### Tool Definitions
+
+When replaying conversations that involve tool use (function calling), include the `tools` field alongside `messages` to provide the tool definitions the model needs:
+
+```json
+{"messages": [{"role": "user", "content": "What's the weather?"}], "tools": [{"type": "function", "function": {"name": "get_weather", "description": "Get weather", "parameters": {"type": "object", "properties": {"location": {"type": "string"}}}}}], "output_length": 50, "timestamp": 0}
+```
+
+The `tools` field is only valid when `messages` is provided. It is injected directly into the API payload as the `tools` parameter.
 
 ## Profile using real Mooncake Trace
 

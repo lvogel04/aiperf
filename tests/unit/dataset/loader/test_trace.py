@@ -497,6 +497,55 @@ class TestMooncakeTraceDatasetLoader:
         assert conversation.turns[1].raw_messages == messages_turn2
         assert conversation.turns[1].max_tokens == 20
 
+    def test_convert_to_conversations_messages_with_tools(
+        self, mock_prompt_generator, default_user_config
+    ):
+        """Test that tools flow through to Turn.raw_tools."""
+        messages = [{"role": "user", "content": "What's the weather?"}]
+        tools = [
+            {"type": "function", "function": {"name": "get_weather", "parameters": {}}}
+        ]
+        trace_data = {
+            "session1": [
+                MooncakeTrace(
+                    messages=messages, tools=tools, output_length=50, timestamp=0
+                ),
+            ]
+        }
+
+        loader = MooncakeTraceDatasetLoader(
+            filename="dummy.jsonl",
+            user_config=default_user_config,
+            prompt_generator=mock_prompt_generator,
+        )
+        conversations = loader.convert_to_conversations(trace_data)
+
+        assert len(conversations) == 1
+        turn = conversations[0].turns[0]
+        assert turn.raw_messages == messages
+        assert turn.raw_tools == tools
+        assert turn.max_tokens == 50
+
+    def test_convert_to_conversations_messages_without_tools(
+        self, mock_prompt_generator, default_user_config
+    ):
+        """Test that raw_tools is None when tools not provided."""
+        messages = [{"role": "user", "content": "Hello"}]
+        trace_data = {
+            "session1": [
+                MooncakeTrace(messages=messages, output_length=10, timestamp=0),
+            ]
+        }
+
+        loader = MooncakeTraceDatasetLoader(
+            filename="dummy.jsonl",
+            user_config=default_user_config,
+            prompt_generator=mock_prompt_generator,
+        )
+        conversations = loader.convert_to_conversations(trace_data)
+
+        assert conversations[0].turns[0].raw_tools is None
+
     def test_load_dataset_with_session_ids(
         self, create_jsonl_file, mock_prompt_generator, default_user_config
     ):

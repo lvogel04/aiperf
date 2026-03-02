@@ -425,6 +425,36 @@ class TestChatEndpoint:
         assert "max_completion_tokens" not in payload
         assert "max_tokens" not in payload
 
+    def test_format_payload_raw_messages_with_tools(self, endpoint, model_endpoint):
+        """Test that tools are injected into payload when raw_tools is set."""
+        raw_messages = [{"role": "user", "content": "What's the weather?"}]
+        raw_tools = [
+            {"type": "function", "function": {"name": "get_weather", "parameters": {}}}
+        ]
+        request_info = create_request_info(
+            model_endpoint=model_endpoint,
+            turns=[Turn(max_tokens=50, raw_messages=raw_messages, raw_tools=raw_tools)],
+        )
+
+        payload = endpoint.format_payload(request_info)
+
+        assert payload["messages"] == raw_messages
+        assert payload["tools"] == raw_tools
+        assert payload["max_completion_tokens"] == 50
+
+    def test_format_payload_raw_messages_without_tools(self, endpoint, model_endpoint):
+        """Test that no tools key exists when raw_tools is None."""
+        raw_messages = [{"role": "user", "content": "Hello"}]
+        request_info = create_request_info(
+            model_endpoint=model_endpoint,
+            turns=[Turn(raw_messages=raw_messages)],
+        )
+
+        payload = endpoint.format_payload(request_info)
+
+        assert payload["messages"] == raw_messages
+        assert "tools" not in payload
+
     def test_format_payload_raw_messages_with_extra_params(self):
         """Test that extra params still apply when using raw_messages."""
         extra_params = [("temperature", 0.7)]

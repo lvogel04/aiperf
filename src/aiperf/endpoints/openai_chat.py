@@ -54,6 +54,9 @@ class ChatEndpoint(BaseEndpoint):
             "stream": model_endpoint.endpoint.streaming,
         }
 
+        if turns[-1].raw_tools is not None:
+            payload["tools"] = turns[-1].raw_tools
+
         if turns[-1].max_tokens is not None:
             token_field = (
                 "max_tokens"

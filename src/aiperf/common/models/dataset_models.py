@@ -141,6 +141,11 @@ class Turn(AIPerfBaseModel):
         description="Pre-formatted OpenAI-compatible messages array. "
         "When set, bypasses normal turn-based message construction in endpoints.",
     )
+    raw_tools: list[dict[str, Any]] | None = Field(
+        default=None,
+        description="Pre-formatted OpenAI-compatible tool definitions. "
+        "When set alongside raw_messages, injected into the API payload.",
+    )
     texts: list[Text] = Field(
         default=[], description="Collection of text data in each turn."
     )
@@ -161,7 +166,7 @@ class Turn(AIPerfBaseModel):
             delay_ms=self.delay,
         )
 
-    def copy_with_stripped_media(self) -> "Turn":
+    def copy_with_stripped_media_and_messages(self) -> "Turn":
         """Create a copy of this turn with multimodal data replaced by placeholders.
 
         This preserves text data (needed for tokenization) but replaces potentially
@@ -169,7 +174,7 @@ class Turn(AIPerfBaseModel):
         more efficient than a full deep copy followed by stripping.
 
         Returns:
-            A new Turn with stripped multimodal contents.
+            A new Turn with stripped multimodal contents and messages.
         """
         return Turn(
             model=self.model,
@@ -177,9 +182,8 @@ class Turn(AIPerfBaseModel):
             timestamp=self.timestamp,
             delay=self.delay,
             max_tokens=self.max_tokens,
-            raw_messages=list(self.raw_messages)
-            if self.raw_messages is not None
-            else None,
+            raw_messages=None,
+            raw_tools=None,
             texts=[Text(name=t.name, contents=list(t.contents)) for t in self.texts],
             images=[
                 Image(

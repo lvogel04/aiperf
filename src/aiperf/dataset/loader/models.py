@@ -216,6 +216,10 @@ class MooncakeTrace(AIPerfBaseModel):
         None,
         description="List of OpenAI-compatible message dicts (each must have a 'role' key) sent directly to the API.",
     )
+    tools: list[dict[str, Any]] | None = Field(
+        None,
+        description="List of OpenAI-compatible tool definitions. Only allowed when 'messages' is provided.",
+    )
 
     # Optional fields
     output_length: int | None = Field(
@@ -242,17 +246,15 @@ class MooncakeTrace(AIPerfBaseModel):
             self.text_input is not None,
             self.messages is not None,
         ]
-        if sum(input_modes) == 0:
+        input_mode_count = sum(input_modes)
+        if input_mode_count == 0:
             raise ValueError(
                 "Exactly one of 'input_length', 'text_input', or 'messages' must be provided"
             )
-        if sum(input_modes) > 1:
+        if input_mode_count > 1:
             raise ValueError(
                 "'input_length', 'text_input', and 'messages' are mutually exclusive. Use only one of them."
             )
-
-        if self.messages is not None:
-            return self._validate_messages()
 
         if self.hash_ids is not None and self.input_length is None:
             raise ValueError(
@@ -261,10 +263,17 @@ class MooncakeTrace(AIPerfBaseModel):
 
         return self
 
-    def _validate_messages(self) -> "MooncakeTrace":
-        """Validate the messages field structure."""
-        if self.hash_ids is not None:
-            raise ValueError("'hash_ids' is not allowed when 'messages' is provided")
+    @model_validator(mode="after")
+    def validate_messages(self) -> "MooncakeTrace":
+        """Validate the messages and tools field structure."""
+        if self.tools is not None:
+            if self.messages is None:
+                raise ValueError("'tools' is only allowed when 'messages' is provided")
+            if not self.tools:
+                raise ValueError("'tools' must be a non-empty list")
+
+        if self.messages is None:
+            return self
 
         if not self.messages:
             raise ValueError("'messages' must be a non-empty list")

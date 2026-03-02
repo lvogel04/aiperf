@@ -88,3 +88,27 @@ class TestMooncakeMessagesValidation:
         ]  # fmt: skip
         trace = MooncakeTrace(messages=messages)
         assert trace.messages is not None
+
+    def test_valid_tools_with_messages(self):
+        """Test that tools are accepted when messages is provided."""
+        messages = [{"role": "user", "content": "What's the weather?"}]
+        tools = [
+            {"type": "function", "function": {"name": "get_weather", "parameters": {}}}
+        ]
+        trace = MooncakeTrace(messages=messages, tools=tools, output_length=50)
+        assert trace.tools == tools
+        assert trace.messages == messages
+
+    def test_invalid_tools_without_messages(self):
+        """Test that tools are rejected when messages is not provided."""
+        tools = [
+            {"type": "function", "function": {"name": "get_weather", "parameters": {}}}
+        ]
+        with pytest.raises(ValidationError, match="tools.*only allowed when.*messages"):
+            MooncakeTrace(input_length=100, tools=tools)
+
+    def test_invalid_tools_empty_list(self):
+        """Test that an empty tools list is rejected."""
+        messages = [{"role": "user", "content": "Hello"}]
+        with pytest.raises(ValidationError, match="tools.*non-empty"):
+            MooncakeTrace(messages=messages, tools=[])
