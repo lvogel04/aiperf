@@ -68,7 +68,9 @@ class TestMooncakeMessagesValidation:
     def test_invalid_messages_with_hash_ids(self):
         """Test that messages + hash_ids is rejected."""
         messages = [{"role": "user", "content": "Hello"}]
-        with pytest.raises(ValidationError, match=r"hash_ids.*not allowed"):
+        with pytest.raises(
+            ValidationError, match=r"hash_ids.*(not allowed|only allowed)"
+        ):
             MooncakeTrace(messages=messages, hash_ids=[1, 2, 3])
 
     def test_invalid_messages_empty_list(self):

@@ -183,9 +183,7 @@ class InferenceClient(AIPerfLifecycleMixin):
 
         # Copy turns with stripped multimodal data to avoid mutating original session
         # and reduce memory usage (placeholders instead of large image/audio/video data)
-        record.turns = [
-            turn.copy_with_stripped_media_and_messages() for turn in request_info.turns
-        ]
+        record.turns = [turn.copy_with_stripped_media() for turn in request_info.turns]
 
         # If this is the first turn, calculate the credit drop latency
         if request_info.turn_index == 0 and request_info.drop_perf_ns is not None:
