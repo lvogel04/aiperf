@@ -166,11 +166,12 @@ class Turn(AIPerfBaseModel):
             delay_ms=self.delay,
         )
 
-    def copy_with_stripped_media_and_messages(self) -> "Turn":
+    def copy_with_stripped_media(self) -> "Turn":
         """Create a copy of this turn with multimodal data replaced by placeholders.
 
-        This preserves text data (needed for tokenization) but replaces potentially
-        large image/audio/video contents with small placeholder strings. This is
+        This preserves text data (needed for tokenization) and raw messages/tools
+        (needed for API payload reconstruction) but replaces potentially large
+        image/audio/video contents with small placeholder strings. This is
         more efficient than a full deep copy followed by stripping.
 
         Returns:
@@ -182,8 +183,10 @@ class Turn(AIPerfBaseModel):
             timestamp=self.timestamp,
             delay=self.delay,
             max_tokens=self.max_tokens,
-            raw_messages=None,
-            raw_tools=None,
+            raw_messages=list(self.raw_messages)
+            if self.raw_messages is not None
+            else None,
+            raw_tools=list(self.raw_tools) if self.raw_tools is not None else None,
             texts=[Text(name=t.name, contents=list(t.contents)) for t in self.texts],
             images=[
                 Image(
